@@ -1,9 +1,11 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { useRoutineStore } from '@/store/routineStore'
 import { ROUTINES } from '@/lib/constants'
-import { todayKey, getGreeting, formatDateLabel } from '@/lib/dateUtils'
+import { todayKey, formatDateLabel } from '@/lib/dateUtils'
+import { getRandomQuote } from '@/lib/quotes'
+import type { Quote } from '@/lib/quotes'
 import RoutineCard from '@/components/RoutineCard'
 import StatsGrid from '@/components/StatsGrid'
 import CalendarView from '@/components/CalendarView'
@@ -15,6 +17,11 @@ export default function Home() {
   const { data, setRecord, getRecord } = useRoutineStore()
   const today = todayKey()
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
+  const [quote, setQuote] = useState<Quote | null>(null)
+
+  useEffect(() => {
+    setQuote(getRandomQuote())
+  }, [])
 
   const doneCount = useMemo(() => {
     const day = data[today] ?? {}
@@ -40,7 +47,12 @@ export default function Home() {
       <p className="mb-1.5 text-[11px] uppercase tracking-widest text-blue-400">
         {formatDateLabel()}
       </p>
-      <h1 className="mb-8 text-2xl font-medium text-gray-900">{getGreeting()}</h1>
+      {quote && (
+        <div className="mb-8">
+          <p className="text-lg font-medium leading-snug text-gray-900">「{quote.text}」</p>
+          <p className="mt-1.5 text-xs text-blue-400">― {quote.author}</p>
+        </div>
+      )}
 
       {/* 全完了バナー */}
       <CompletionBanner show={doneCount === ROUTINES.length} />
