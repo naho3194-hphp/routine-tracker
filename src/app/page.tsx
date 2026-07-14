@@ -23,8 +23,7 @@ export default function Home() {
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const [quote, setQuote] = useState<Quote | null>(null)
   const now = new Date()
-  const [chartYear, setChartYear] = useState(now.getFullYear())
-  const [chartMonth, setChartMonth] = useState(now.getMonth())
+  const [chartPeriod, setChartPeriod] = useState({ year: now.getFullYear(), month: now.getMonth() })
 
   useEffect(() => {
     setQuote(getRandomQuote())
@@ -136,12 +135,12 @@ export default function Home() {
         <CalendarView
           data={data}
           onSelectDate={setSelectedDate}
-          onMonthChange={(y, m) => { setChartYear(y); setChartMonth(m) }}
+          onMonthChange={(y, m) => setChartPeriod({ year: y, month: m })}
         />
       </div>
 
       {/* ③ 月間達成率グラフ */}
-      <MonthlyChart data={data} year={chartYear} month={chartMonth} />
+      <MonthlyChart data={data} year={chartPeriod.year} month={chartPeriod.month} />
 
       <DayEditModal dateKey={selectedDate} onClose={() => setSelectedDate(null)} />
     </main>

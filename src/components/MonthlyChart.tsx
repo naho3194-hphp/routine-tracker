@@ -28,7 +28,10 @@ export default function MonthlyChart({ data, year, month }: Props) {
 
   return (
     <div className="rounded-2xl bg-white p-4 shadow-sm">
-      <p className="mb-3 text-[10px] uppercase tracking-widest text-gray-400">月間達成率</p>
+      <div className="mb-3 flex items-center justify-between">
+        <p className="text-[10px] uppercase tracking-widest text-gray-400">月間達成率</p>
+        <p className="text-xs font-medium text-blue-500">{year}年{month + 1}月</p>
+      </div>
       <div className="flex items-end gap-[2px] h-14">
         {bars.map(({ d, ratio, done }) => {
           const isFuture = isThisMonth && d > todayD
