@@ -60,18 +60,23 @@ export default function RoutineCard({ routine, record, onComplete, onUndo }: Pro
         }
       `}
     >
-      {/* アイコン */}
-      <div
-        className={`
-          flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl transition-colors duration-200
-          ${record.done ? 'bg-blue-50' : 'bg-[#f0f4ff]'}
-        `}
-      >
-        <Icon
-          size={20}
-          className={record.done ? 'text-blue-600' : 'text-blue-300'}
-        />
-      </div>
+      {/* アイコン ⑧ 時間進捗カラー */}
+      {(() => {
+        let bgClass = 'bg-[#f0f4ff]'
+        let iconClass = 'text-blue-300'
+        if (record.done) {
+          const ratio = Math.min((record.mins ?? routine.goalMins) / routine.goalMins, 1)
+          if (ratio >= 1) { bgClass = 'bg-blue-600'; iconClass = 'text-white' }
+          else if (ratio >= 0.75) { bgClass = 'bg-blue-400'; iconClass = 'text-white' }
+          else if (ratio >= 0.5) { bgClass = 'bg-blue-200'; iconClass = 'text-blue-700' }
+          else { bgClass = 'bg-blue-100'; iconClass = 'text-blue-500' }
+        }
+        return (
+          <div className={`flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl transition-colors duration-300 ${bgClass}`}>
+            <Icon size={20} className={iconClass} />
+          </div>
+        )
+      })()}
 
       {/* テキスト */}
       <div className="min-w-0 flex-1">

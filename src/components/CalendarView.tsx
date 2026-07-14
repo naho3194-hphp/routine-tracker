@@ -14,9 +14,10 @@ import {
 interface Props {
   data: AppData
   onSelectDate: (dateKey: string) => void
+  onMonthChange?: (year: number, month: number) => void
 }
 
-export default function CalendarView({ data, onSelectDate }: Props) {
+export default function CalendarView({ data, onSelectDate, onMonthChange }: Props) {
   const now = new Date()
   const today = formatDate(now)
   const routineIds = ROUTINES.map((r) => r.id)
@@ -27,27 +28,36 @@ export default function CalendarView({ data, onSelectDate }: Props) {
   const isCurrentMonth = viewYear === now.getFullYear() && viewMonth === now.getMonth()
 
   const goToPrev = () => {
-    if (viewMonth === 0) { setViewYear(y => y - 1); setViewMonth(11) }
-    else setViewMonth(m => m - 1)
+    const newYear = viewMonth === 0 ? viewYear - 1 : viewYear
+    const newMonth = viewMonth === 0 ? 11 : viewMonth - 1
+    setViewYear(newYear); setViewMonth(newMonth)
+    onMonthChange?.(newYear, newMonth)
   }
 
   const goToNext = () => {
     if (isCurrentMonth) return
-    if (viewMonth === 11) { setViewYear(y => y + 1); setViewMonth(0) }
-    else setViewMonth(m => m + 1)
+    const newYear = viewMonth === 11 ? viewYear + 1 : viewYear
+    const newMonth = viewMonth === 11 ? 0 : viewMonth + 1
+    setViewYear(newYear); setViewMonth(newMonth)
+    onMonthChange?.(newYear, newMonth)
   }
 
   const streak = useMemo(() => calcStreak(data, routineIds), [data])
   const firstDay = getFirstDayOfMonth(viewYear, viewMonth)
   const days = getDaysInMonth(viewYear, viewMonth)
 
-  const getDayStatus = (d: number): 'full' | 'partial' | 'none' => {
+  const getDoneCount = (d: number): number => {
     const key = `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`
     const day = data[key] ?? {}
-    const done = routineIds.filter((id) => day[id]?.done).length
-    if (done === routineIds.length) return 'full'
-    if (done > 0) return 'partial'
-    return 'none'
+    return routineIds.filter((id) => day[id]?.done).length
+  }
+
+  const heatColor = (count: number) => {
+    if (count === 0) return ''
+    if (count === 1) return 'bg-blue-100'
+    if (count === 2) return 'bg-blue-200'
+    if (count === 3) return 'bg-blue-400 text-white'
+    return 'bg-blue-600 text-white'
   }
 
   return (
@@ -92,43 +102,34 @@ export default function CalendarView({ data, onSelectDate }: Props) {
         ))}
         {Array.from({ length: days }, (_, i) => i + 1).map((d) => {
           const key = `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`
-          const status = getDayStatus(d)
+          const count = getDoneCount(d)
           const isToday = key === today
+          const heat = heatColor(count)
           return (
             <button
               key={d}
               onClick={() => onSelectDate(key)}
               className={`
-                relative flex aspect-square items-center justify-center rounded-md transition-colors
-                hover:bg-blue-50
+                relative flex aspect-square items-center justify-center rounded-md text-[11px] transition-colors
+                ${heat || 'text-gray-400 hover:bg-blue-50'}
                 ${isToday ? 'ring-1 ring-blue-400 ring-offset-1' : ''}
               `}
             >
-              {status === 'none' ? (
-                <span className="text-[11px] text-gray-400">{d}</span>
-              ) : (
-                <span
-                  className={`
-                    h-1.5 w-1.5 rounded-full
-                    ${status === 'full' ? 'bg-blue-600' : 'border border-blue-400 bg-blue-100'}
-                  `}
-                />
-              )}
+              {d}
             </button>
           )
         })}
       </div>
 
       {/* 凡例 */}
-      <div className="mt-3 flex gap-3.5">
-        <div className="flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-full bg-blue-600" />
-          <span className="text-[10px] text-gray-400">全完了</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-full border border-blue-400 bg-blue-100" />
-          <span className="text-[10px] text-gray-400">一部完了</span>
-        </div>
+      <div className="mt-3 flex gap-3 items-center">
+        <span className="text-[10px] text-gray-400">達成度</span>
+        {[['bg-blue-100','1'], ['bg-blue-200','2'], ['bg-blue-400','3'], ['bg-blue-600','4']].map(([cls, label]) => (
+          <div key={label} className="flex items-center gap-1">
+            <span className={`h-3 w-3 rounded-sm ${cls}`} />
+            <span className="text-[10px] text-gray-400">{label}</span>
+          </div>
+        ))}
       </div>
     </div>
   )

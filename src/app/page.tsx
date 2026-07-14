@@ -13,6 +13,8 @@ import CalendarView from '@/components/CalendarView'
 import CompletionBanner from '@/components/CompletionBanner'
 import DayEditModal from '@/components/DayEditModal'
 import Confetti from '@/components/Confetti'
+import ProgressRing from '@/components/ProgressRing'
+import MonthlyChart from '@/components/MonthlyChart'
 import type { RoutineId } from '@/types'
 
 export default function Home() {
@@ -20,6 +22,9 @@ export default function Home() {
   const today = todayKey()
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const [quote, setQuote] = useState<Quote | null>(null)
+  const now = new Date()
+  const [chartYear, setChartYear] = useState(now.getFullYear())
+  const [chartMonth, setChartMonth] = useState(now.getMonth())
 
   useEffect(() => {
     setQuote(getRandomQuote())
@@ -35,7 +40,6 @@ export default function Home() {
     return ROUTINES.reduce((sum, r) => sum + (day[r.id]?.done ? (day[r.id]?.mins ?? r.goalMins) : 0), 0)
   }, [data, today])
 
-  // ⑦ 完了項目を下に
   const sortedRoutines = useMemo(() => {
     const day = data[today] ?? {}
     return [...ROUTINES].sort((a, b) => {
@@ -57,19 +61,26 @@ export default function Home() {
 
   return (
     <main className="mx-auto min-h-screen max-w-md bg-[#f0f4ff] px-4.5 pb-12 pt-8">
-      {/* ① 紙吹雪 */}
       <Confetti trigger={allDone} />
 
       {/* ヘッダー */}
-      <p className="mb-1.5 text-[11px] uppercase tracking-widest text-blue-400">
-        {formatDateLabel()}
-      </p>
-      {quote && (
-        <div className="mb-8">
-          <p className="text-lg font-medium leading-snug text-gray-900">「{quote.text}」</p>
-          <p className="mt-1.5 text-xs text-blue-400">― {quote.author}</p>
+      <div className="mb-6 flex items-start justify-between">
+        <div className="flex-1 min-w-0">
+          <p className="mb-1.5 text-[11px] uppercase tracking-widest text-blue-400">
+            {formatDateLabel()}
+          </p>
+          {quote && (
+            <div>
+              <p className="text-lg font-medium leading-snug text-gray-900">「{quote.text}」</p>
+              <p className="mt-1.5 text-xs text-blue-400">― {quote.author}</p>
+            </div>
+          )}
         </div>
-      )}
+        {/* ⑤ 進捗リング */}
+        <div className="ml-4 flex-shrink-0">
+          <ProgressRing done={doneCount} total={ROUTINES.length} />
+        </div>
+      </div>
 
       {/* 全完了バナー */}
       <CompletionBanner show={allDone} />
@@ -121,7 +132,16 @@ export default function Home() {
         <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
         <p className="text-[10px] uppercase tracking-widest text-gray-400">今月の記録</p>
       </div>
-      <CalendarView data={data} onSelectDate={setSelectedDate} />
+      <div className="mb-4">
+        <CalendarView
+          data={data}
+          onSelectDate={setSelectedDate}
+          onMonthChange={(y, m) => { setChartYear(y); setChartMonth(m) }}
+        />
+      </div>
+
+      {/* ③ 月間達成率グラフ */}
+      <MonthlyChart data={data} year={chartYear} month={chartMonth} />
 
       <DayEditModal dateKey={selectedDate} onClose={() => setSelectedDate(null)} />
     </main>
