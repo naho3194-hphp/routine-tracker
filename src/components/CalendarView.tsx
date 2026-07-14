@@ -1,6 +1,7 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
+import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react'
 import type { AppData } from '@/types'
 import { ROUTINES } from '@/lib/constants'
 import {
@@ -17,17 +18,31 @@ interface Props {
 
 export default function CalendarView({ data, onSelectDate }: Props) {
   const now = new Date()
-  const year = now.getFullYear()
-  const month = now.getMonth()
   const today = formatDate(now)
   const routineIds = ROUTINES.map((r) => r.id)
 
+  const [viewYear, setViewYear] = useState(now.getFullYear())
+  const [viewMonth, setViewMonth] = useState(now.getMonth())
+
+  const isCurrentMonth = viewYear === now.getFullYear() && viewMonth === now.getMonth()
+
+  const goToPrev = () => {
+    if (viewMonth === 0) { setViewYear(y => y - 1); setViewMonth(11) }
+    else setViewMonth(m => m - 1)
+  }
+
+  const goToNext = () => {
+    if (isCurrentMonth) return
+    if (viewMonth === 11) { setViewYear(y => y + 1); setViewMonth(0) }
+    else setViewMonth(m => m + 1)
+  }
+
   const streak = useMemo(() => calcStreak(data, routineIds), [data])
-  const firstDay = getFirstDayOfMonth(year, month)
-  const days = getDaysInMonth(year, month)
+  const firstDay = getFirstDayOfMonth(viewYear, viewMonth)
+  const days = getDaysInMonth(viewYear, viewMonth)
 
   const getDayStatus = (d: number): 'full' | 'partial' | 'none' => {
-    const key = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`
+    const key = `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`
     const day = data[key] ?? {}
     const done = routineIds.filter((id) => day[id]?.done).length
     if (done === routineIds.length) return 'full'
@@ -39,9 +54,17 @@ export default function CalendarView({ data, onSelectDate }: Props) {
     <div className="rounded-2xl bg-white p-4 shadow-sm">
       {/* ヘッダー */}
       <div className="mb-3.5 flex items-center justify-between">
-        <p className="text-sm font-medium text-gray-900">
-          {year}年{month + 1}月
-        </p>
+        <div className="flex items-center gap-2">
+          <button onClick={goToPrev} className="flex h-7 w-7 items-center justify-center rounded-full hover:bg-blue-50 text-gray-400 hover:text-blue-600 transition-colors">
+            <IconChevronLeft size={16} />
+          </button>
+          <p className="text-sm font-medium text-gray-900 w-20 text-center">
+            {viewYear}年{viewMonth + 1}月
+          </p>
+          <button onClick={goToNext} className={`flex h-7 w-7 items-center justify-center rounded-full transition-colors ${isCurrentMonth ? 'text-gray-200 cursor-default' : 'hover:bg-blue-50 text-gray-400 hover:text-blue-600'}`}>
+            <IconChevronRight size={16} />
+          </button>
+        </div>
         <span className="rounded-full bg-blue-50 px-3 py-1 text-xs text-blue-700">
           {streak > 0 ? `🔥 ${streak}日連続` : '記録をつけよう'}
         </span>
@@ -62,7 +85,7 @@ export default function CalendarView({ data, onSelectDate }: Props) {
           <div key={`empty-${i}`} />
         ))}
         {Array.from({ length: days }, (_, i) => i + 1).map((d) => {
-          const key = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`
+          const key = `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`
           const status = getDayStatus(d)
           const isToday = key === today
           return (
