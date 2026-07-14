@@ -89,8 +89,9 @@ export default function RoutineCard({ routine, record, onComplete, onUndo }: Pro
           {record.done ? (
             <motion.button
               key="undo"
-              initial={{ scale: 0.8 }}
-              animate={{ scale: 1 }}
+              initial={{ scale: 0 }}
+              animate={{ scale: [0, 1.3, 0.9, 1.1, 1] }}
+              transition={{ duration: 0.4, times: [0, 0.3, 0.6, 0.8, 1] }}
               exit={{ scale: 0.8 }}
               onClick={onUndo}
               aria-label="取り消し"

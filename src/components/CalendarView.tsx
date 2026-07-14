@@ -65,9 +65,15 @@ export default function CalendarView({ data, onSelectDate }: Props) {
             <IconChevronRight size={16} />
           </button>
         </div>
-        <span className="rounded-full bg-blue-50 px-3 py-1 text-xs text-blue-700">
-          {streak > 0 ? `🔥 ${streak}日連続` : '記録をつけよう'}
-        </span>
+        {streak > 0 ? (
+          <span className="flex items-center gap-1 rounded-full bg-blue-600 px-3 py-1 text-xs font-medium text-white shadow-sm">
+            🔥 {streak}日連続
+          </span>
+        ) : (
+          <span className="rounded-full bg-blue-50 px-3 py-1 text-xs text-blue-400">
+            記録をつけよう
+          </span>
+        )}
       </div>
 
       {/* 曜日ヘッダー */}
